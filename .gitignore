@@ -1,0 +1,8 @@
+virtualEnvi/
+*.jar
+__pycache__/
+.pytest_cache/
+allure-results/
+logs/
+reports/
+screenshots/
