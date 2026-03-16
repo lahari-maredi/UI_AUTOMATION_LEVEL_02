@@ -1,17 +1,7 @@
 pipeline {
     agent any
 
-    environment {
-        REPO_URL = 'https://github.com/lahari-maredi/UI_AUTOMATION_LEVEL_02.git'
-    }
-
     stages {
-
-        stage('Clone Repository') {
-            steps {
-                git branch: 'main', url: "${REPO_URL}"
-            }
-        }
 
         stage('Install Dependencies') {
             steps {
@@ -22,6 +12,7 @@ pipeline {
 
         stage('Start Selenium Grid') {
             steps {
+                bat 'docker-compose down'
                 bat 'docker-compose up -d'
             }
         }
@@ -34,20 +25,26 @@ pipeline {
 
         stage('Run Tests (Parallel)') {
             steps {
-                bat 'pytest -n 3 --alluredir=allure-results'
+                bat 'pytest -n 3 --alluredir=reports'
             }
         }
 
-        stage('Generate Allure Report') {
+        stage('Generate Allure Report (Jenkins UI)') {
             steps {
-                bat 'allure generate allure-results -o allure-report --clean'
+                allure([
+                    includeProperties: false,
+                    jdk: '',
+                    reportBuildPolicy: 'ALWAYS',
+                    results: [[path: 'reports']]
+                ])
             }
         }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'allure-report/**', allowEmptyArchive: true
+            bat 'docker-compose down'
+            archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
         }
     }
 }
