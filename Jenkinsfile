@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
     stages {
 
         stage('Install Dependencies') {
@@ -12,7 +16,10 @@ pipeline {
 
         stage('Start Selenium Grid') {
             steps {
-                bat 'docker-compose down'
+                // 🔥 Force remove any existing containers (fix for conflict issue)
+                bat 'for /f "tokens=1" %i in (\'docker ps -aq\') do docker rm -f %i'
+
+                // Start fresh Selenium Grid
                 bat 'docker-compose up -d'
             }
         }
@@ -29,7 +36,7 @@ pipeline {
             }
         }
 
-        stage('Generate Allure Report (Jenkins UI)') {
+        stage('Allure Report (Jenkins UI + Trend)') {
             steps {
                 allure([
                     includeProperties: false,
@@ -43,7 +50,10 @@ pipeline {
 
     post {
         always {
-            bat 'docker-compose down'
+            // Cleanup Docker after execution
+            bat 'for /f "tokens=1" %i in (\'docker ps -aq\') do docker rm -f %i'
+
+            // Archive reports
             archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
         }
     }
