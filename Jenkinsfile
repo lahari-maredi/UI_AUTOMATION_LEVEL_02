@@ -16,10 +16,8 @@ pipeline {
 
         stage('Start Selenium Grid') {
             steps {
-                // 🔥 Force remove any existing containers (fix for conflict issue)
-                bat 'for /f "tokens=1" %i in (\'docker ps -aq\') do docker rm -f %i'
-
-                // Start fresh Selenium Grid
+                // ✅ FIXED (%%i instead of %i)
+                bat 'for /f "tokens=1" %%i in (\'docker ps -aq\') do docker rm -f %%i'
                 bat 'docker-compose up -d'
             }
         }
@@ -50,10 +48,8 @@ pipeline {
 
     post {
         always {
-            // Cleanup Docker after execution
-            bat 'for /f "tokens=1" %i in (\'docker ps -aq\') do docker rm -f %i'
-
-            // Archive reports
+            // ✅ FIXED here too
+            bat 'for /f "tokens=1" %%i in (\'docker ps -aq\') do docker rm -f %%i'
             archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
         }
     }
